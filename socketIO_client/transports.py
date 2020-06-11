@@ -15,7 +15,6 @@ except ImportError:
 An incompatible websocket library is conflicting with the one we need.
 You can remove the incompatible library and install the correct one
 by running the following commands:
-
 yes | pip uninstall websocket websocket-client
 pip install -U websocket-client""")
 
@@ -118,6 +117,8 @@ class WebsocketTransport(AbstractTransport):
         if engineIO_session:
             params['sid'] = engineIO_session.id
             kw['timeout'] = self._timeout = engineIO_session.ping_timeout
+        else:
+            self._timeout = None
         ws_url = '%s://%s/?%s' % (
             'wss' if is_secure else 'ws', url, format_query(params))
         http_scheme = 'https' if is_secure else 'http'
@@ -168,6 +169,8 @@ class WebsocketTransport(AbstractTransport):
             raise ConnectionError('send disconnected (%s)' % e)
 
     def set_timeout(self, seconds=None):
+        if self._timeout is None:
+            self._timeout = seconds
         self._connection.settimeout(seconds or self._timeout)
 
 
@@ -206,3 +209,4 @@ def _get_cert(kw):
     if hasattr(cert, '__iter__') and cert[0] is None:
         cert = None
     return cert
+    
